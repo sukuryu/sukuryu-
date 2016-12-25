@@ -30,7 +30,7 @@ def convolution(data):
 def play(sound_data):
     p = pyaudio.PyAudio()
     stream = p.open(format = 8,
-                    channels = 2,
+                    channels = CHANNELS,
                     rate = rate,
                     output = True)
 
@@ -39,7 +39,6 @@ def play(sound_data):
     while(sound_data[index:, 0].size > N):
         stream.write(bytes(sound_data[index:index + N]))
         index += N
-        #byte_data = bytearray(data[index:index + N] )
 
     #stream.write(data)
 
@@ -83,7 +82,12 @@ def create_plot(real_data, conv_data):
     plt.show()
 
 #再生部分作成
-play(result_data)
+#rate = int(rate * 1.2)
+
+#play(result_data)
+
+#print(type(data))
+#print(type(result_data))
 
 #print(result_data[500:600])
 #print(data[500:600])
