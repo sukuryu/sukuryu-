@@ -80,7 +80,13 @@ def play(data):
                     rate = rate,
                     output = True)
 
-    stream.write(data)
+    index = 0
+
+    while(data[index:, 0].size > N):
+        stream.write(data[index:index + N])
+        index += N
+
+    #stream.write(data)
 
     stream.close()
     p.terminate()
@@ -103,7 +109,7 @@ while(ret_data_L[index:].size > N):
 result_data = numpy.empty((0, 2), int)
 
 for i in range(L_data.size):
-    result_data = numpy.append(result_data, numpy.array([[int(ret_data_L[i]), int(ret_data_R[i])]]), axis=0)
+    result_data = numpy.append(result_data, numpy.array([[int(ret_data_R[i]), int(ret_data_L[i])]]), axis=0)
 
 #波形
 def create_plot(real_data, conv_data):
@@ -124,5 +130,4 @@ def create_plot(real_data, conv_data):
 #再生部分作成
 #play(data)
 
-print(data[100:200, 0])
-print(result_data[100:200, 0])
+play(data)
