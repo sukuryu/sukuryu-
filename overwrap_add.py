@@ -1,57 +1,12 @@
-import pandas
+
 import matplotlib.pyplot as plt
 import numpy
 import scipy.io.wavfile as scw
 import pyaudio
+import wave
 
 hrtf_L = {}
 hrtf_R = {}
-
-#--------------L_Load-----------------------------------
-for i in range(72):
-    str_i = str(i * 5)
-
-    if len(str_i) < 2:
-        str_i = "00" + str_i
-    elif len(str_i) < 3:
-        str_i = "0" + str_i
-
-    filename = "L0e" + str_i + "a.dat"
-    filepath = "../hrtfs/elev0/" + filename
-    test = open(filepath, "r").read().split("\n")
-
-    data = []
-
-    for item in test:
-        if item != '':
-            data.append(float(item))
-
-    hrtf_L[i] = data
-
-#---------------R_Load----------------------------
-for i in range(72):
-    str_i = str(i * 5)
-
-    if len(str_i) < 2:
-        str_i = "00" + str_i
-    elif len(str_i) < 3:
-        str_i = "0" + str_i
-
-    filename = "R0e" + str_i + "a.dat"
-    filepath = "../hrtfs/elev0/" + filename
-    test = open(filepath, "r").read().split("\n")
-
-    data = []
-
-    for item in test:
-        if item != '':
-            data.append(float(item))
-
-    hrtf_R[i] = data
-
-#hrtf_data = hrtf_R[0]
-
-#-----------------処理-------------------
 
 sound_data_path = "./test.wav"
 N = 512
@@ -72,19 +27,19 @@ def convolution(data):
 
     return ret_dt.real
 
-def play(data):
+def play(sound_data):
     p = pyaudio.PyAudio()
-    stream = p.open(format =
-                    pyaudio.paInt16,
+    stream = p.open(format = 8,
                     channels = 2,
                     rate = rate,
                     output = True)
 
     index = 0
 
-    while(data[index:, 0].size > N):
-        stream.write(data[index:index + N])
+    while(sound_data[index:, 0].size > N):
+        stream.write(bytes(sound_data[index:index + N]))
         index += N
+        #byte_data = bytearray(data[index:index + N] )
 
     #stream.write(data)
 
@@ -109,9 +64,9 @@ while(ret_data_L[index:].size > N):
 result_data = numpy.empty((0, 2), int)
 
 for i in range(L_data.size):
-    result_data = numpy.append(result_data, numpy.array([[int(ret_data_R[i]), int(ret_data_L[i])]]), axis=0)
+    result_data = numpy.append(result_data, numpy.array([[int(ret_data_L[i]), int(ret_data_R[i])]]), axis=0)
 
-#波形
+#波形をプロット
 def create_plot(real_data, conv_data):
     plt.subplot(221)
     plt.plot(real_data[:, 0])
@@ -128,6 +83,7 @@ def create_plot(real_data, conv_data):
     plt.show()
 
 #再生部分作成
-#play(data)
+play(result_data)
 
-play(data)
+#print(result_data[500:600])
+#print(data[500:600])
