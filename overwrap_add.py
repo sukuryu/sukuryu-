@@ -53,7 +53,7 @@ for i in range(72):
 sound_data_path = "./test.wav"
 N = 512
 CHANNELS = 2
-position = 36
+position = 18
 FFT_size = 1024
 M = 513
 overLap = 511
@@ -112,7 +112,7 @@ def play(sound_data):
     #    stream.write(bytes(sound_data[index:index + N]))
     #    index += N
 
-    stream.write(sound_data)
+    stream.write(bytes(ound_data))
 
     stream.close()
     p.terminate()
