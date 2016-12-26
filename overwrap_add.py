@@ -8,22 +8,94 @@ import wave
 hrtf_L = {}
 hrtf_R = {}
 
+#--------------L_Load-----------------------------------
+for i in range(72):
+    str_i = str(i * 5)
+
+    if len(str_i) < 2:
+        str_i = "00" + str_i
+    elif len(str_i) < 3:
+        str_i = "0" + str_i
+
+    filename = "L0e" + str_i + "a.dat"
+    filepath = "../hrtfs/elev0/" + filename
+    test = open(filepath, "r").read().split("\n")
+
+    data = []
+
+    for item in test:
+        if item != '':
+            data.append(float(item))
+
+    hrtf_L[i] = data
+
+#---------------R_Load----------------------------
+for i in range(72):
+    str_i = str(i * 5)
+
+    if len(str_i) < 2:
+        str_i = "00" + str_i
+    elif len(str_i) < 3:
+        str_i = "0" + str_i
+
+    filename = "R0e" + str_i + "a.dat"
+    filepath = "../hrtfs/elev0/" + filename
+    test = open(filepath, "r").read().split("\n")
+
+    data = []
+
+    for item in test:
+        if item != '':
+            data.append(float(item))
+
+    hrtf_R[i] = data
+
 sound_data_path = "./test.wav"
 N = 512
 CHANNELS = 2
+position = 36
+FFT_size = 1024
+M = 513
+overLap = 511
 
-def convolution(data):
+count = 0
+move_count = 0
+
+def convolutionL(data):
     #与えられたデータに窓をかける
     #window = numpy.hanning(N)
     #dt = data * window
 
     #fft
-    spectrum = numpy.fft.fft(data, n = N)
+    spectrum = numpy.fft.fft(data, n = FFT_size)
 
     #---------hrtfを足し合わせる--------------------
 
+    hrtf_fft = numpy.fft.fft(hrtf_L[position], n = FFT_size)
+    #print(hrtf_fft)
+    result = spectrum * hrtf_fft
+
     #ifft
-    ret_dt = numpy.fft.ifft(spectrum, n = N)
+    ret_dt = numpy.fft.ifft(result, n = N)
+
+    return ret_dt.real
+
+def convolutionR(data):
+    #与えられたデータに窓をかける
+    #window = numpy.hanning(N)
+    #dt = data * window
+
+    #fft
+    spectrum = numpy.fft.fft(data, n = FFT_size)
+
+    #---------hrtfを足し合わせる--------------------
+
+    hrtf_fft = numpy.fft.fft(hrtf_R[position], n = FFT_size)
+    #print(hrtf_fft)
+    result = spectrum * hrtf_fft
+
+    #ifft
+    ret_dt = numpy.fft.ifft(result, n = N)
 
     return ret_dt.real
 
@@ -56,14 +128,21 @@ ret_data_R = numpy.zeros(R_data.size)
 index = 0
 
 while(ret_data_L[index:].size > N):
-    ret_data_L[index:index + N] += convolution(L_data[index:index + N])
-    ret_data_R[index:index + N] += convolution(R_data[index:index + N])
-    index += N
+    ret_data_L[index:index + N] += convolutionL(L_data[index:index + N])
+    ret_data_R[index:index + N] += convolutionR(R_data[index:index + N])
+    #if count > 500:
+    #    if move_count == 71:
+    #        move_count = 0
+    #    else:
+    #        move_count += 1
+    #    count = 0
+    #count += 1
+    index += 1
 
-result_data = numpy.empty((0, 2), int)
+result_data = numpy.empty((0, 2), numpy.int16)
 
 for i in range(L_data.size):
-    result_data = numpy.append(result_data, numpy.array([[int(ret_data_L[i]), int(ret_data_R[i])]]), axis=0)
+    result_data = numpy.append(result_data, numpy.array([[int(ret_data_L[i]), int(ret_data_R[i])]]).astype(numpy.int16), axis=0)
 
 #波形をプロット
 def create_plot(real_data, conv_data):
@@ -81,13 +160,10 @@ def create_plot(real_data, conv_data):
 
     plt.show()
 
+
 #再生部分作成
 #rate = int(rate * 1.2)
 
-#play(result_data)
+play(result_data)
 
-#print(type(data))
-#print(type(result_data))
-
-#print(result_data[500:600])
-#print(data[500:600])
+#print(hrtf_L[1])
