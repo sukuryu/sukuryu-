@@ -36,11 +36,11 @@ def play(sound_data):
 
     index = 0
 
-    while(sound_data[index:, 0].size > N):
-        stream.write(bytes(sound_data[index:index + N]))
-        index += N
+    #while(sound_data[index:, 0].size > N):
+    #    stream.write(bytes(sound_data[index:index + N]))
+    #    index += N
 
-    #stream.write(data)
+    stream.write(sound_data)
 
     stream.close()
     p.terminate()
@@ -81,13 +81,5 @@ def create_plot(real_data, conv_data):
 
     plt.show()
 
-#再生部分作成
-#rate = int(rate * 1.2)
 
-#play(result_data)
-
-#print(type(data))
-#print(type(result_data))
-
-#print(result_data[500:600])
-#print(data[500:600])
+create_plot(data[:100], result_data[:100])
