@@ -3,6 +3,7 @@ import scipy.io.wavfile as scw
 import pyaudio
 import load_hrtf
 import matplotlib.pyplot as plt
+import TCP_Server
 
 #水平面のデータのみロード
 load = load_hrtf.load_hrtf()
@@ -12,6 +13,7 @@ sound_data_path = "./test.wav"
 N = 512
 CHANNELS = 2
 position = 45
+port = 7000
 #FFT2048
 #FFT_size = 2048
 #M = 1537
@@ -37,6 +39,11 @@ stream = p.open(format = 8,
 
 buf = numpy.empty((0, 2), dtype = numpy.int16)
 
+#受信処理
+server = TCP_Server.TCP_Server("", port)
+server.create_server()
+server.accept_and_start()
+
 #-----------------------------------------------------------------
 
 #畳み込み処理
@@ -51,8 +58,13 @@ def convolution(data, hrtf):
 #リアルタイム処理部分
 while(True):
     result_data = numpy.empty((0, 2), dtype = numpy.int16)
-    tmp_conv_L, add_L = convolution(sound_data[index:index + M, 0], elev0Hrtf_L[position])
-    tmp_conv_R, add_R = convolution(sound_data[index:index + M, 1], elev0Hrtf_R[position])
+    receive_data = server.get_yaw()
+
+    if receive_data == 0:
+        continue
+
+    tmp_conv_L, add_L = convolution(sound_data[index:index + M, 0], elev0Hrtf_L[receive_data - 1])
+    tmp_conv_R, add_R = convolution(sound_data[index:index + M, 1], elev0Hrtf_R[receive_data - 1])
 
     tmp_conv_L[:overLap] += history_L
     tmp_conv_R[:overLap] += history_R
