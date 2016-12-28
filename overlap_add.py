@@ -76,7 +76,7 @@ def convolutionL(data):
     result = spectrum * hrtf_fft
 
     #ifft
-    ret_dt = numpy.fft.ifft(result, n = N)
+    ret_dt = numpy.fft.ifft(result, n = M)
 
     return ret_dt.real
 
@@ -95,7 +95,7 @@ def convolutionR(data):
     result = spectrum * hrtf_fft
 
     #ifft
-    ret_dt = numpy.fft.ifft(result, n = N)
+    ret_dt = numpy.fft.ifft(result, n = M)
 
     return ret_dt.real
 
@@ -112,7 +112,7 @@ def play(sound_data):
     #    stream.write(bytes(sound_data[index:index + N]))
     #    index += N
 
-    stream.write(bytes(ound_data))
+    stream.write(bytes(sound_data))
 
     stream.close()
     p.terminate()
@@ -127,9 +127,9 @@ ret_data_R = numpy.zeros(R_data.size)
 
 index = 0
 
-while(ret_data_L[index:].size > N):
-    ret_data_L[index:index + N] += convolutionL(L_data[index:index + N])
-    ret_data_R[index:index + N] += convolutionR(R_data[index:index + N])
+while(ret_data_L[index:].size > M):
+    ret_data_L[index:index + M] += convolutionL(L_data[index:index + M])
+    ret_data_R[index:index + M] += convolutionR(R_data[index:index + M])
     #if count > 500:
     #    if move_count == 71:
     #        move_count = 0
