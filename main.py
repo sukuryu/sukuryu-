@@ -12,10 +12,16 @@ sound_data_path = "./test.wav"
 N = 512
 CHANNELS = 2
 position = 45
-#2048
-FFT_size = 2048
-M = 1537
+#FFT2048
+#FFT_size = 2048
+#M = 1537
+#overLap = 511
+
+#FFT1024
+FFT_size = 1024
+M = 513
 overLap = 511
+
 volume = 3
 index = 0
 history_L = numpy.zeros(overLap, dtype = numpy.float64)
@@ -43,7 +49,7 @@ def convolution(data, hrtf):
     return return_data[:M], return_data[M:]
 
 #リアルタイム処理部分
-while(sound_data[index:, 0].size > M):
+while(True):
     result_data = numpy.empty((0, 2), dtype = numpy.int16)
     tmp_conv_L, add_L = convolution(sound_data[index:index + M, 0], elev0Hrtf_L[position])
     tmp_conv_R, add_R = convolution(sound_data[index:index + M, 1], elev0Hrtf_R[position])
@@ -59,6 +65,9 @@ while(sound_data[index:, 0].size > M):
 
     stream.write(bytes(result_data))
     index += M
+
+    if(sound_data[index:, 0].size < M):
+        index = 0
 
 #ストリームを閉じる
 stream.close()
