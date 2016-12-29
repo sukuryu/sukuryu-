@@ -6,6 +6,8 @@ class TCP_Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
+        self.pitch = 0
+        self.roll = 0
         self.yaw = 0
 
     def create_server(self):
@@ -14,12 +16,18 @@ class TCP_Server:
         self.serversocket.bind((self.host, self.port))
         self.serversocket.listen(1)
 
-    def get_roop(self, client_socket):
+    def get_loop(self, client_socket):
         bufsize = 514
         while True:
             self.yaw = int.from_bytes(client_socket.recv(bufsize), "big")
 
-    def accept_and_start(self):
+    def get_loop_2(self, client_socket):
+        bufsize = 514
+        while True:
+            quaternion = str.from_bytes(client_socket.recv(bufsize), "big")
+            #stringを3つのintに変換
+
+    def accept_and_start(self, mode):
         self.clientsock, client_address = self.serversocket.accept()
 
         send_data = b"s"
@@ -27,8 +35,13 @@ class TCP_Server:
         print("接続完了")
         self.clientsock.sendall(send_data)
 
-        client_handler = threading.Thread(target=self.get_roop, args=(self.clientsock,))
-        client_handler.start()
+        if mode == "elev0":
+            client_handler = threading.Thread(target=self.get_loop, args=(self.clientsock,))
+            client_handler.start()
+        elif mode == "all_elev":
+            client_handler = threading.Thread(target=self.get_loop_2, args=(self.clientsock,))
+            client_handler.start()
+
 
     def get_yaw(self):
         return self.yaw

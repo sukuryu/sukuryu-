@@ -1,166 +1,90 @@
-
-import matplotlib.pyplot as plt
 import numpy
-import scipy.io.wavfile as scw
+import load_hrtf
 import pyaudio
-import wave
+import TCP_Server
+import threading
 
-hrtf_L = {}
-hrtf_R = {}
+class overlap_add:
 
-#--------------L_Load-----------------------------------
-for i in range(72):
-    str_i = str(i * 5)
+    def __init__(self, fft_size = 1024, cut_size = 513, ovarLap = 511):
+        self.index = 0
+        self.fft_size = fft_size
+        self.cut_size = cut_size
+        self.overLap = ovarLap
+        self.history_L = numpy.zeros(self.overLap, dtype = numpy.float64)
+        self.history_R = numpy.zeros(self.overLap, dtype = numpy.float64)
 
-    if len(str_i) < 2:
-        str_i = "00" + str_i
-    elif len(str_i) < 3:
-        str_i = "0" + str_i
+    def convolution(self, data, hrtf):
+        self.spectrum = numpy.fft.fft(data, n = self.fft_size)
+        self.hrtf_fft = numpy.fft.fft(hrtf, n = self.fft_size)
+        self.add = self.spectrum * self.hrtf_fft
+        self.result = numpy.fft.ifft(self.add, n = self.fft_size)
+        self.return_data = self.result.real * self.volume
+        return self.return_data[:self.cut_size], self.return_data[self.cut_size:]
 
-    filename = "L0e" + str_i + "a.dat"
-    filepath = "../hrtfs/elev0/" + filename
-    test = open(filepath, "r").read().split("\n")
+    def play_loop_elev0(self):
+        while True:
+            result_data = numpy.empty((0, 2), dtype=numpy.int16)
+            receive_data = self.serverObj.get_yaw()
 
-    data = []
+            if receive_data == 0 or receive_data > 72:
+                continue
 
-    for item in test:
-        if item != '':
-            data.append(float(item))
+            receive_data -= 1
 
-    hrtf_L[i] = data
+            if receive_data == 0:
+                pass
+            else:
+                receive_data = 72 - receive_data
 
-#---------------R_Load----------------------------
-for i in range(72):
-    str_i = str(i * 5)
+            tmp_conv_L, add_L = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfL[receive_data])
+            tmp_conv_R, add_R = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfR[receive_data])
 
-    if len(str_i) < 2:
-        str_i = "00" + str_i
-    elif len(str_i) < 3:
-        str_i = "0" + str_i
+            tmp_conv_L[:self.overLap] += self.history_L
+            tmp_conv_R[:self.overLap] += self.history_R
 
-    filename = "R0e" + str_i + "a.dat"
-    filepath = "../hrtfs/elev0/" + filename
-    test = open(filepath, "r").read().split("\n")
+            self.history_L = add_L
+            self.history_R = add_R
 
-    data = []
+            for i in range(tmp_conv_L.size):
+                result_data = numpy.append(result_data, numpy.array([[int(tmp_conv_L[i]), int(tmp_conv_R[i])]], dtype=numpy.int16), axis=0)
 
-    for item in test:
-        if item != '':
-            data.append(float(item))
+            self.streamObj.write(bytes(result_data))
+            self.index += self.cut_size
 
-    hrtf_R[i] = data
+            if(self.sound_data[self.index:, 0].size < self.cut_size):
+                self.index = 0
 
-sound_data_path = "./test.wav"
-N = 512
-CHANNELS = 2
-position = 18
-FFT_size = 1024
-M = 513
-overLap = 511
+    def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, volume = 1):
+        self.serverObj = serverObj
+        self.hrtfL = hrtfL
+        self.hrtfR = hrtfR
+        self.streamObj = streamObj
+        self.volume = volume
+        self.init_position = init_position
+        self.sound_data = sound_data
 
-count = 0
-move_count = 0
+        #サーバーとクライアントの接続確認
+        self.serverObj.create_server()
+        self.serverObj.accept_and_start(mode=mode)
 
-def convolutionL(data):
-    #与えられたデータに窓をかける
-    #window = numpy.hanning(N)
-    #dt = data * window
+        if mode == "elev0":
+            #水平のみの処理
+            self.play_handler = threading.Thread(target=self.play_loop_elev0)
+            self.play_handler.start()
 
-    #fft
-    spectrum = numpy.fft.fft(data, n = FFT_size)
+        elif mode == "all_elev":
+            #3次元空間の処理
+            self.play_handler_allElev = threading.Thread(target=self.play_loop)
+            self.play_handler_allElev.start()
 
-    #---------hrtfを足し合わせる--------------------
+        else:
+            print("モード指定が正しくありません")
 
-    hrtf_fft = numpy.fft.fft(hrtf_L[position], n = FFT_size)
-    #print(hrtf_fft)
-    result = spectrum * hrtf_fft
-
-    #ifft
-    ret_dt = numpy.fft.ifft(result, n = M)
-
-    return ret_dt.real
-
-def convolutionR(data):
-    #与えられたデータに窓をかける
-    #window = numpy.hanning(N)
-    #dt = data * window
-
-    #fft
-    spectrum = numpy.fft.fft(data, n = FFT_size)
-
-    #---------hrtfを足し合わせる--------------------
-
-    hrtf_fft = numpy.fft.fft(hrtf_R[position], n = FFT_size)
-    #print(hrtf_fft)
-    result = spectrum * hrtf_fft
-
-    #ifft
-    ret_dt = numpy.fft.ifft(result, n = M)
-
-    return ret_dt.real
-
-def play(sound_data):
-    p = pyaudio.PyAudio()
-    stream = p.open(format = 8,
-                    channels = CHANNELS,
-                    rate = rate,
-                    output = True)
-
-    index = 0
-
-    #while(sound_data[index:, 0].size > N):
-    #    stream.write(bytes(sound_data[index:index + N]))
-    #    index += N
-
-    stream.write(bytes(sound_data))
-
-    stream.close()
-    p.terminate()
-
-rate, data = scw.read(sound_data_path)
-
-L_data = data[:, 0]
-R_data = data[:, 1]
-
-ret_data_L = numpy.zeros(L_data.size)
-ret_data_R = numpy.zeros(R_data.size)
-
-index = 0
-
-while(ret_data_L[index:].size > M):
-    ret_data_L[index:index + M] += convolutionL(L_data[index:index + M])
-    ret_data_R[index:index + M] += convolutionR(R_data[index:index + M])
-    #if count > 500:
-    #    if move_count == 71:
-    #        move_count = 0
-    #    else:
-    #        move_count += 1
-    #    count = 0
-    #count += 1
-    index += 1
-
-result_data = numpy.empty((0, 2), numpy.int16)
-
-for i in range(L_data.size):
-    result_data = numpy.append(result_data, numpy.array([[int(ret_data_L[i]), int(ret_data_R[i])]]).astype(numpy.int16), axis=0)
-
-#波形をプロット
-def create_plot(real_data, conv_data):
-    plt.subplot(221)
-    plt.plot(real_data[:, 0])
-
-    plt.subplot(222)
-    plt.plot(real_data[:, 1])
-
-    plt.subplot(223)
-    plt.plot(conv_data[:, 0])
-
-    plt.subplot(224)
-    plt.plot(conv_data[:, 1])
-
-    plt.show()
-
-
-#再生部分作成
-#rate = int(rate * 1.2)
-play(result_data)
+    def stop(self, mode):
+        if mode == "elev0":
+            self.play_handler._stop()
+        elif mode == "all_elev":
+            self.play_handler_allElev._stop()
+        else:
+            print("再生中またはモード指定が正しくありません")
