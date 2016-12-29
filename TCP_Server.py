@@ -26,6 +26,10 @@ class TCP_Server:
         while True:
             quaternion = str.from_bytes(client_socket.recv(bufsize), "big")
             #stringを3つのintに変換
+            data_list = quaternion.split(",")
+            self.pitch = int(data_list[0])
+            self.roll = int(data_list[1])
+            self.yaw = int(data_list[2])
 
     def accept_and_start(self, mode):
         self.clientsock, client_address = self.serversocket.accept()
@@ -45,6 +49,9 @@ class TCP_Server:
 
     def get_yaw(self):
         return self.yaw
+
+    def get_quaternion(self):
+        return self.pitch, self.roll, self.yaw
 
     def socket_close(self):
         self.serversocket.close()

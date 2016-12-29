@@ -34,8 +34,10 @@ class overlap_add:
 
             if receive_data == 0:
                 pass
+            elif receive_data < 72:
+                receive_data = 71 - receive_data
             else:
-                receive_data = 72 - receive_data
+                receive_data = 142 - receive_data
 
             tmp_conv_L, add_L = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfL[receive_data])
             tmp_conv_R, add_R = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfR[receive_data])
@@ -54,6 +56,12 @@ class overlap_add:
 
             if(self.sound_data[self.index:, 0].size < self.cut_size):
                 self.index = 0
+
+    def play_loop_allElev(self):
+        while True:
+            result_data = numpy.empty((0, 2), dtype=numpy.int16)
+            pitch, roll, yaw = self.serverObj.get_quaternion()
+            
 
     def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, volume = 1):
         self.serverObj = serverObj
@@ -75,7 +83,7 @@ class overlap_add:
 
         elif mode == "all_elev":
             #3次元空間の処理
-            self.play_handler_allElev = threading.Thread(target=self.play_loop)
+            self.play_handler_allElev = threading.Thread(target=self.play_loop_allElev)
             self.play_handler_allElev.start()
 
         else:
