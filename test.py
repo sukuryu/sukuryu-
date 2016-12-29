@@ -27,3 +27,7 @@ ob.start(serverObj=server,
          streamObj=stream,
          mode=mode,
          sound_data=sound_data)
+
+
+#pyaudioをclass側でterminateできないのでmainクラスでterminateする
+p.terminate()

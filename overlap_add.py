@@ -82,9 +82,11 @@ class overlap_add:
             print("モード指定が正しくありません")
 
     def stop(self, mode):
-        if mode == "elev0":
+        if mode == "elev0" and self.streamObj.is_active():
             self.play_handler._stop()
-        elif mode == "all_elev":
+            self.streamObj.close()
+        elif mode == "all_elev" and self.streamObj.is_active():
             self.play_handler_allElev._stop()
+            self.streamObj.close()
         else:
-            print("再生中またはモード指定が正しくありません")
+            print("モード指定が正しくありません")
