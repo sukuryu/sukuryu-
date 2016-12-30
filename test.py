@@ -8,6 +8,7 @@ sound_data_path = "./test.wav"
 rate, sound_data = scw.read(sound_data_path)
 port = 7000
 mode = "elev0"
+init_position = 18
 CHANNELS = 2
 p = pyaudio.PyAudio()
 stream = p.open(format = 8,
@@ -26,8 +27,5 @@ ob.start(serverObj=server,
          hrtfR=R,
          streamObj=stream,
          mode=mode,
+         init_position=init_position,
          sound_data=sound_data)
-
-
-#pyaudioをclass側でterminateできないのでmainクラスでterminateする
-p.terminate()

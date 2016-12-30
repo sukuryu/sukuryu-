@@ -30,14 +30,19 @@ class overlap_add:
             if receive_data == 0 or receive_data > 72:
                 continue
 
+            #このマイナス1はいずれ消す
             receive_data -= 1
 
             if receive_data == 0:
                 pass
-            elif receive_data < 72:
+
+            receive_data = receive_data + self.init_position
+
+            if receive_data < 72 and receive_data >= 0:
                 receive_data = 71 - receive_data
             else:
                 receive_data = 142 - receive_data
+                print(receive_data)
 
             tmp_conv_L, add_L = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfL[receive_data])
             tmp_conv_R, add_R = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfR[receive_data])
