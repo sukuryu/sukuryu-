@@ -1,13 +1,14 @@
 import socket
 import threading
+import quaternion
+import binascii
 
 class TCP_Server:
 
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.pitch = 0
-        self.roll = 0
+        self.data_list = []
         self.yaw = 0
 
     def create_server(self):
@@ -22,21 +23,16 @@ class TCP_Server:
             self.yaw = int.from_bytes(client_socket.recv(bufsize), "big")
 
     def accept_loop_2(self, client_socket):
-        bufsize = 514
+        bufsize = 512
         while True:
-            pitch_etc = str.from_bytes(client_socket.recv(bufsize), "big")
+            pitch_etc = client_socket.recv(bufsize)
+            print(pitch_etc)
             #stringを3つのintに変換
-            data_list = pitch_etc.split(",")
-            self.pitch = int(data_list[0])
-            self.roll = int(data_list[1])
-            self.yaw = int(data_list[2])
-            #計算
+            #self.data_list = pitch_etc.split(",")
 
-    def accept_quaternion(self, client_socket):
-        bufsize = 1024
-        while True:
-            quaternion = str.from_bytes(client_socket.recv(bufsize), "big")
-            #計算
+            #test = str(self.data_list[0]) + "," + str(self.data_list[1]) + "," + str(self.data_list[2])
+
+            #print(test)
 
     def accept_and_start(self, mode):
         self.clientsock, client_address = self.serversocket.accept()
@@ -58,7 +54,7 @@ class TCP_Server:
         return self.yaw
 
     def get_pitch_etc(self):
-        return self.pitch, self.roll, self.yaw
+        return self.data_list
 
     def socket_close(self):
         self.serversocket.close()

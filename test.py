@@ -7,7 +7,7 @@ import scipy.io.wavfile as scw
 sound_data_path = "./test.wav"
 rate, sound_data = scw.read(sound_data_path)
 port = 7000
-mode = "elev0"
+mode = "all_elev"
 init_position = 18
 CHANNELS = 2
 p = pyaudio.PyAudio()

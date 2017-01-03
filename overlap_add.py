@@ -65,7 +65,7 @@ class overlap_add:
     def play_loop_allElev(self):
         while True:
             result_data = numpy.empty((0, 2), dtype=numpy.int16)
-            pitch, roll, yaw = self.serverObj.get_pitch_etc()
+            pitch_etc = self.serverObj.get_pitch_etc()
 
 
     def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, volume = 1):
