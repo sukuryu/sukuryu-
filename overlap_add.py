@@ -65,16 +65,37 @@ class overlap_add:
     def play_loop_allElev(self):
         while True:
             result_data = numpy.empty((0, 2), dtype=numpy.int16)
-            pitch_etc = self.serverObj.get_pitch_etc()
+            datalist = self.serverObj.get_pitch_etc()
 
+            if datalist == [] or len(datalist) != 3 or type(datalist[0]) != float:
+                continue
 
-    def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, volume = 1):
+            #受信データから行列作成
+            R = numpy.array([[numpy.cos(datalist[1]) * numpy.cos(datalist[2]),
+                             -numpy.cos(datalist[1]) * numpy.sin(datalist[2]),
+                             numpy.sin(datalist[1])],
+                            [numpy.sin(datalist[0]) * numpy.sin(datalist[1]) * numpy.cos(datalist[2]) + numpy.cos(datalist[0]) * numpy.sin(datalist[2]),
+                             -numpy.sin(datalist[0]) * numpy.sin(datalist[1]) * numpy.sin(datalist[2]) + numpy.cos(datalist[0]) * numpy.cos(datalist[2]),
+                             -numpy.sin(datalist[0]) * numpy.cos(datalist[1])],
+                            [-numpy.cos(datalist[0]) * numpy.sin(datalist[1]) * numpy.cos(datalist[2]) + numpy.sin(datalist[0]) * numpy.sin(datalist[2]),
+                             numpy.cos(datalist[0]) * numpy.sin(datalist[1]) * numpy.sin(datalist[2]) + numpy.sin(datalist[1]) * numpy.cos(datalist[2]),
+                             numpy.cos(datalist[0]) * numpy.sin(datalist[1])]])
+
+            init_position = numpy.array(self.init_position_3d)
+
+            #内積
+            currnt_coordinates = numpy.dot(R, init_position)
+
+            print(currnt_coordinates)
+
+    def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, init_position_3d = [1, 0, 0], volume = 1):
         self.serverObj = serverObj
         self.hrtfL = hrtfL
         self.hrtfR = hrtfR
         self.streamObj = streamObj
         self.volume = volume
         self.init_position = init_position
+        self.init_position_3d = init_position_3d
         self.sound_data = sound_data
 
         #サーバーとクライアントの接続確認

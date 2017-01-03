@@ -1,7 +1,7 @@
 import socket
 import threading
 import quaternion
-import binascii
+import re
 
 class TCP_Server:
 
@@ -25,14 +25,16 @@ class TCP_Server:
     def accept_loop_2(self, client_socket):
         bufsize = 512
         while True:
-            pitch_etc = client_socket.recv(bufsize)
-            print(pitch_etc)
-            #stringを3つのintに変換
-            #self.data_list = pitch_etc.split(",")
+            pitch_etc = client_socket.recv(bufsize).decode("ascii")
+            self.data_list = pitch_etc.split(",")
 
-            #test = str(self.data_list[0]) + "," + str(self.data_list[1]) + "," + str(self.data_list[2])
+            num_reg = re.compile("^[+-]?(\d*\.\d+|\d+\.?\d*)([eE][+-]?\d+|)\Z")
 
-            #print(test)
+            if len(self.data_list) != 3 or num_reg.match(self.data_list[0]) == False or num_reg.match(self.data_list[1]) == False or num_reg.match(self.data_list[2]) == False:
+                continue
+
+            for i in range(3):
+                self.data_list[i] = float(self.data_list[i])
 
     def accept_and_start(self, mode):
         self.clientsock, client_address = self.serversocket.accept()
