@@ -17,7 +17,7 @@ stream = p.open(format = 8,
                 output = True)
 
 hrtf = load_hrtf.load_hrtf()
-L, R = hrtf.load_elev0hrtf()
+L, R = hrtf.load_all_hrtfs()
 
 server = TCP_Server.TCP_Server("", port=port)
 

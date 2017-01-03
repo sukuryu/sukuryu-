@@ -206,4 +206,18 @@ class load_hrtf:
             hrtfs_L = {}
             hrtfs_R = {}
 
-        return allHrtf_L, allHrtf_R
+        #--------並び替え処理(一番上が0°一番下が180°となるように)---------
+        tmp_hrtfs_L = {}
+        tmp_hrtfs_R = {}
+
+        for i in range(19):
+            dic = 18 - i
+            tmp_hrtfs_L[dic] = allHrtf_L[i]
+            tmp_hrtfs_R[dic] = allHrtf_R[i]
+
+        for i in range(9):
+            dic = 27 - i
+            tmp_hrtfs_L[dic] = allHrtf_L[-(i + 1)]
+            tmp_hrtfs_R[dic] = allHrtf_R[-(i + 1)]
+
+        return tmp_hrtfs_L, tmp_hrtfs_R

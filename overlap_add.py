@@ -3,6 +3,7 @@ import load_hrtf
 import pyaudio
 import TCP_Server
 import threading
+import math
 
 class overlap_add:
 
@@ -78,15 +79,22 @@ class overlap_add:
                              -numpy.sin(datalist[0]) * numpy.sin(datalist[1]) * numpy.sin(datalist[2]) + numpy.cos(datalist[0]) * numpy.cos(datalist[2]),
                              -numpy.sin(datalist[0]) * numpy.cos(datalist[1])],
                             [-numpy.cos(datalist[0]) * numpy.sin(datalist[1]) * numpy.cos(datalist[2]) + numpy.sin(datalist[0]) * numpy.sin(datalist[2]),
-                             numpy.cos(datalist[0]) * numpy.sin(datalist[1]) * numpy.sin(datalist[2]) + numpy.sin(datalist[1]) * numpy.cos(datalist[2]),
+                             numpy.cos(datalist[0]) * numpy.sin(datalist[1]) * numpy.sin(datalist[2]) + numpy.sin(datalist[0]) * numpy.cos(datalist[2]),
                              numpy.cos(datalist[0]) * numpy.sin(datalist[1])]])
 
             init_position = numpy.array(self.init_position_3d)
 
             #内積
-            currnt_coordinates = numpy.dot(R, init_position)
+            current_coordinates = numpy.dot(R, init_position)
 
-            print(currnt_coordinates)
+            #r = numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2 + current_coordinates[2] ** 2)
+            θ = numpy.arccos(current_coordinates[2] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2 + current_coordinates[2] ** 2))
+            if current_coordinates[1] < 0:
+                φ = -numpy.arccos(current_coordinates[0] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2))
+            else:
+                φ = numpy.arccos(current_coordinates[0] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2))
+
+            print(φ * 180 / math.pi)
 
     def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, init_position_3d = [1, 0, 0], volume = 1):
         self.serverObj = serverObj
