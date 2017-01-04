@@ -23,6 +23,7 @@ class overlap_add:
         self.return_data = self.result.real * self.volume
         return self.return_data[:self.cut_size], self.return_data[self.cut_size:]
 
+    #水平面のみ
     def play_loop_elev0(self):
         while True:
             result_data = numpy.empty((0, 2), dtype=numpy.int16)
@@ -63,6 +64,7 @@ class overlap_add:
             if(self.sound_data[self.index:, 0].size < self.cut_size):
                 self.index = 0
 
+    #全方向再生処理
     def play_loop_allElev(self):
         while True:
             result_data = numpy.empty((0, 2), dtype=numpy.int16)
@@ -88,13 +90,47 @@ class overlap_add:
             current_coordinates = numpy.dot(R, init_position)
 
             #r = numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2 + current_coordinates[2] ** 2)
-            θ = numpy.arccos(current_coordinates[2] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2 + current_coordinates[2] ** 2))
+            θ = (numpy.arccos(current_coordinates[2] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2 + current_coordinates[2] ** 2))) * 180 / math.pi
             if current_coordinates[1] < 0:
-                φ = -numpy.arccos(current_coordinates[0] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2))
+                φ = (-numpy.arccos(current_coordinates[0] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2))) * 180 / math.pi
             else:
-                φ = numpy.arccos(current_coordinates[0] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2))
+                φ = (numpy.arccos(current_coordinates[0] / numpy.sqrt(current_coordinates[0] ** 2 + current_coordinates[1] ** 2))) * 180 / math.pi
 
-            print(φ * 180 / math.pi)
+            if φ < 0:
+                φ = 360 + φ
+
+            #φを0-71、θを0-27に変換
+            φ = round(φ / 5)
+            θ = round(θ / 5)
+
+            if φ == 72:
+                φ = 0
+            if θ > 27:
+                θ = 27
+
+            if φ == 0:
+                pass
+            else:
+                φ = 72 - φ
+
+            #畳込みと再生
+            tmp_conv_L, add_L = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfL[θ][φ])
+            tmp_conv_R, add_R = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfR[θ][φ])
+
+            tmp_conv_L[:self.overLap] += self.history_L
+            tmp_conv_R[:self.overLap] += self.history_R
+
+            self.history_L = add_L
+            self.history_R = add_R
+
+            for i in range(tmp_conv_L.size):
+                result_data = numpy.append(result_data, numpy.array([[int(tmp_conv_L[i]), int(tmp_conv_R[i])]], dtype=numpy.int16), axis=0)
+
+            self.streamObj.write(bytes(result_data))
+            self.index += self.cut_size
+
+            if(self.sound_data[self.index:, 0].size < self.cut_size):
+                self.index = 0
 
     def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, init_position_3d = [1, 0, 0], volume = 1):
         self.serverObj = serverObj
