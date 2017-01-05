@@ -4,7 +4,7 @@ import TCP_Server
 import pyaudio
 import scipy.io.wavfile as scw
 
-sound_data_path = "./test.wav"
+sound_data_path = "./ongaku.wav"
 rate, sound_data = scw.read(sound_data_path)
 port = 7000
 mode = "all_elev"
