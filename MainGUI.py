@@ -16,10 +16,13 @@ class MainWindow(QMainWindow):
         #windowSize取得
         self.windowSize = QDesktopWidget().availableGeometry().size()
 
+        #回答ボタン初期化
         kaitouButton(self)
 
+        #右側の画面初期化
         systemButton(self)
 
+        #全画面表示
         self.resize(self.windowSize.width(), self.windowSize.height())
         self.show()
 

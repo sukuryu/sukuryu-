@@ -17,15 +17,28 @@ class TCP_Server:
         self.serversocket.bind((self.host, self.port))
         self.serversocket.listen(1)
 
-    def accept_loop(self, client_socket):
+    def accept_loop(self):
+        self.clientsock, client_address = self.serversocket.accept()
+        self.clientsock.sendall(b"s")
+
+        print("接続")
+
         bufsize = 514
         while True:
-            self.yaw = int.from_bytes(client_socket.recv(bufsize), "big")
+            self.yaw = int.from_bytes(self.clientsock.recv(bufsize), "big")
+            print(yaw)
 
-    def accept_loop_2(self, client_socket):
+    def accept_loop_2(self):
+        print("accept")
+
+        self.clientsock, client_address = self.serversocket.accept()
+        self.clientsock.sendall(b"s")
+
+        print("接続")
+
         bufsize = 512
         while True:
-            pitch_etc = client_socket.recv(bufsize).decode("ascii")
+            pitch_etc = self.clientsock.recv(bufsize).decode("ascii")
             self.data_list = pitch_etc.split(",")
 
             num_reg = re.compile("^[+-]?(\d*\.\d+|\d+\.?\d*)([eE][+-]?\d+|)\Z")
@@ -37,19 +50,16 @@ class TCP_Server:
                 self.data_list[i] = float(self.data_list[i])
 
     def accept_and_start(self, mode):
-        self.clientsock, client_address = self.serversocket.accept()
 
-        send_data = b"s"
-
-        print("接続完了")
-        self.clientsock.sendall(send_data)
+        #print("接続完了")
+        #self.clientsock.sendall(send_data)
 
         if mode == "elev0":
-            client_handler = threading.Thread(target=self.accept_loop, args=(self.clientsock,))
+            client_handler = threading.Thread(target=self.accept_loop)
             client_handler.start()
         elif mode == "all_elev":
             #pitch_roll_yawかquaternionを使う
-            client_handler = threading.Thread(target=self.accept_loop_2, args=(self.clientsock,))
+            client_handler = threading.Thread(target=self.accept_loop_2)
             client_handler.start()
 
     def get_yaw(self):
