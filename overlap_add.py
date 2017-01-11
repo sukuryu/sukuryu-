@@ -7,13 +7,14 @@ import math
 
 class overlap_add:
 
-    def __init__(self, fft_size = 1024, cut_size = 513, ovarLap = 511):
+    def __init__(self, fft_size = 1024, cut_size = 513, ovarLap = 511, parent = None):
         self.index = 0
         self.fft_size = fft_size
         self.cut_size = cut_size
         self.overLap = ovarLap
         self.history_L = numpy.zeros(self.overLap, dtype = numpy.float64)
         self.history_R = numpy.zeros(self.overLap, dtype = numpy.float64)
+        self.parent = parent
 
     def convolution(self, data, hrtf):
         self.spectrum = numpy.fft.fft(data, n = self.fft_size)
@@ -26,6 +27,10 @@ class overlap_add:
     #水平面のみ
     def play_loop_elev0(self):
         while True:
+            if self.parent.stop_flag == True:
+                print("break")
+                break
+
             result_data = numpy.empty((0, 2), dtype=numpy.int16)
             receive_data = self.serverObj.get_yaw()
 
@@ -67,6 +72,10 @@ class overlap_add:
     #全方向再生処理
     def play_loop_allElev(self):
         while True:
+            if self.parent.stop_flag == True:
+                print("break")
+                break
+
             result_data = numpy.empty((0, 2), dtype=numpy.int16)
             datalist = self.serverObj.get_pitch_etc()
 
@@ -132,6 +141,8 @@ class overlap_add:
             if(self.sound_data[self.index:, 0].size < self.cut_size):
                 self.index = 0
 
+        print("end")
+
     def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, init_position_3d = [1, 0, 0], volume = 1):
         self.serverObj = serverObj
         self.hrtfL = hrtfL
@@ -143,8 +154,8 @@ class overlap_add:
         self.sound_data = sound_data
 
         #サーバーとクライアントの接続確認
-        self.serverObj.create_server()
-        self.serverObj.accept_and_start(mode=mode)
+        #self.serverObj.create_server()
+        #self.serverObj.accept_and_start(mode=mode)
 
         if mode == "elev0":
             #水平のみの処理
@@ -161,10 +172,8 @@ class overlap_add:
 
     def stop(self, mode):
         if mode == "elev0" and self.streamObj.is_active():
-            self.play_handler._stop()
             self.streamObj.close()
         elif mode == "all_elev" and self.streamObj.is_active():
-            self.play_handler_allElev._stop()
             self.streamObj.close()
         else:
             print("モード指定が正しくありません")

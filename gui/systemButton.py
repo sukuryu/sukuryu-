@@ -12,12 +12,6 @@ class systemButton(QWidget):
         #parentから画面サイズ取得
         size = self.parent.windowSize
 
-        #fontの設定
-        font = QFont()
-        #font.setFamily()
-        font.setBold(True)
-        font.setPointSize(32)
-
         #スタートボタン
         startButton = QPushButton("スタート", self.parent)
         startButton.setGeometry(size.width() / 18 * 15,
@@ -50,22 +44,32 @@ class systemButton(QWidget):
         connectButton.setCheckable(True)
         connectButton.clicked[bool].connect(self.connect)
 
-        #connectの状態ラベル
-        statusLabel = QLabel("接続なし", self.parent)
-        statusLabel.setGeometry(size.width() / 18 * 15,
-                                size.height() / 15 * 9,
-                                size.width() / 18 * 2,
-                                size.height() / 18 * 2)
-        statusLabel.setFont(font)
-
-
-
-
     def startFunc(self):
-        print("start")
+        self.parent.stop_flag = False
+        self.parent.ob.start(serverObj=self.parent.server,
+                            hrtfL=self.parent.L,
+                            hrtfR=self.parent.R,
+                            streamObj=self.parent.stream,
+                            mode=self.parent.mode,
+                            init_position=self.parent.init_position,
+                            sound_data=self.parent.sound_data)
 
     def pushData(self):
         print("push")
 
     def connect(self, status):
-        print("connet")
+
+        if status == True:
+            self.parent.statusLabel.setStyleSheet("color: red")
+            self.parent.statusLabel.setText("接続待機中")
+            self.parent.server.create_server(self.parent)
+            self.parent.server.accept_and_start(self.parent.mode)
+
+        else:
+            if self.parent.statusLabel.text() == "接続待機中":
+                self.parent.server.time_out()
+            else:
+                self.parent.server.send_stop()
+                self.parent.server.socket_close()
+                self.parent.statusLabel.setText("接続なし")
+                self.parent.statusLabel.setStyleSheet("color: black")
