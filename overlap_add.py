@@ -15,6 +15,8 @@ class overlap_add:
         self.history_L = numpy.zeros(self.overLap, dtype = numpy.float64)
         self.history_R = numpy.zeros(self.overLap, dtype = numpy.float64)
         self.parent = parent
+        #スレッドが動作しているかの判定
+        self.threadActiveFlag = False
 
     def convolution(self, data, hrtf):
         self.spectrum = numpy.fft.fft(data, n = self.fft_size)
@@ -26,7 +28,10 @@ class overlap_add:
 
     #水平面のみ
     def play_loop_elev0(self):
+        self.threadActiveFlag = True
+
         while True:
+            #gui処理
             if self.parent.stop_flag == True:
                 print("break")
                 break
@@ -69,9 +74,14 @@ class overlap_add:
             if(self.sound_data[self.index:, 0].size < self.cut_size):
                 self.index = 0
 
+        self.threadActiveFlag = False
+
     #全方向再生処理
     def play_loop_allElev(self):
+        self.threadActiveFlag = True
+
         while True:
+            #gui処理
             if self.parent.stop_flag == True:
                 print("break")
                 break
@@ -142,6 +152,7 @@ class overlap_add:
                 self.index = 0
 
         print("end")
+        self.threadActiveFlag = False
 
     def start(self, serverObj, hrtfL, hrtfR, streamObj, mode, sound_data, init_position = 0, init_position_3d = [1, 0, 0], volume = 1):
         self.serverObj = serverObj
@@ -177,3 +188,6 @@ class overlap_add:
             self.streamObj.close()
         else:
             print("モード指定が正しくありません")
+
+    def is_active(self):
+        return self.threadActiveFlag

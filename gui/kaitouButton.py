@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import *
 import numpy
 import math
 import sys
+sys.path.append("gui/")
+from dialog import Dialog
 
 class kaitouButton(QWidget):
     def __init__(self, parent = None):
@@ -22,6 +24,9 @@ class kaitouButton(QWidget):
             button.clicked.connect(self.button_event)
 
     def button_event(self):
-        self.parent.stop_flag = True
-        sender = self.sender()
-        print(sender.objectName())
+        if self.parent.ob.is_active() == True:
+            self.parent.stop_flag = True
+            sender = self.sender()
+            print(sender.objectName())
+        else:
+            Dialog(self.parent, 2)

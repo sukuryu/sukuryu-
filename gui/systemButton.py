@@ -1,6 +1,9 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import sys
+sys.path.append("gui/")
+from dialog import Dialog
 
 class systemButton(QWidget):
     def __init__(self, parent):
@@ -36,23 +39,30 @@ class systemButton(QWidget):
                             size.height() / 25 * 1)
 
         #socket待機ボタン(on-off)
-        connectButton = QPushButton("接続", self.parent)
-        connectButton.setGeometry(size.width() / 18 * 15,
-                                size.height() / 15 * 7,
-                                size.width() / 18 * 2,
-                                size.height() / 18 * 2)
-        connectButton.setCheckable(True)
-        connectButton.clicked[bool].connect(self.connect)
+        self.connectButton = QPushButton("接続", self.parent)
+        self.connectButton.setGeometry(size.width() / 18 * 15,
+                                    size.height() / 15 * 7,
+                                    size.width() / 18 * 2,
+                                    size.height() / 18 * 2)
+        self.connectButton.setCheckable(True)
+        self.connectButton.clicked[bool].connect(self.connect)
+        #self.connectButton.setChecked(True)
 
     def startFunc(self):
-        self.parent.stop_flag = False
-        self.parent.ob.start(serverObj=self.parent.server,
-                            hrtfL=self.parent.L,
-                            hrtfR=self.parent.R,
-                            streamObj=self.parent.stream,
-                            mode=self.parent.mode,
-                            init_position=self.parent.init_position,
-                            sound_data=self.parent.sound_data)
+
+        if self.parent.server.check_connection() == True and self.parent.ob.is_active() == False:
+            self.parent.stop_flag = False
+            self.parent.ob.start(serverObj=self.parent.server,
+                                hrtfL=self.parent.L,
+                                hrtfR=self.parent.R,
+                                streamObj=self.parent.stream,
+                                mode=self.parent.mode,
+                                init_position=self.parent.init_position,
+                                sound_data=self.parent.sound_data)
+        else:
+            Dialog(self.parent, 1)
+            #QMessageBox.question(self, "再生中または接続がありません", QMessageBox.Yes, QMessageBox.Yes)
+
 
     def pushData(self):
         print("push")
@@ -67,6 +77,8 @@ class systemButton(QWidget):
 
         else:
             if self.parent.statusLabel.text() == "接続待機中":
+                self.parent.statusLabel.setText("接続なし")
+                self.parent.statusLabel.setStyleSheet("color: black")
                 self.parent.server.time_out()
             else:
                 self.parent.server.send_stop()

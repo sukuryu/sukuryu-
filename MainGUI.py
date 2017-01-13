@@ -47,10 +47,10 @@ class MainWindow(QMainWindow):
         font.setPointSize(26)
 
         #回答ボタン初期化
-        kaitouButton(self)
+        self.kaitouB = kaitouButton(self)
 
         #右側の画面初期化
-        systemButton(self)
+        self.sysButton = systemButton(self)
 
         #connectの状態ラベル
         self.statusLabel = QLabel("接続なし", self)
