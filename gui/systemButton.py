@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 import sys
 sys.path.append("gui/")
 from dialog import Dialog
+import time
 
 class systemButton(QWidget):
     def __init__(self, parent):
@@ -15,6 +16,9 @@ class systemButton(QWidget):
         #parentから画面サイズ取得
         size = self.parent.windowSize
 
+        #初期位置保存用list
+        self.initPositionList = []
+
         #スタートボタン
         startButton = QPushButton("スタート", self.parent)
         startButton.setGeometry(size.width() / 18 * 15,
@@ -22,6 +26,14 @@ class systemButton(QWidget):
                                 size.width() / 18 * 2,
                                 size.height() / 18 * 2)
         startButton.clicked.connect(self.startFunc)
+
+        #データリセットボタン
+        resetButton = QPushButton("リセット", self.parent)
+        resetButton.setGeometry(size.width() / 18 * 15,
+                                size.height() / 15 * 10,
+                                size.width() / 18 * 2,
+                                size.height() / 18 * 2)
+        resetButton.clicked.connect(self.resetFunc)
 
         #データ吐き出しボタン
         pushDataButton = QPushButton("データ出力", self.parent)
@@ -32,8 +44,8 @@ class systemButton(QWidget):
         pushDataButton.clicked.connect(self.pushData)
 
         #セーブするときの名前
-        pushName = QLineEdit("", self.parent)
-        pushName.setGeometry(size.width() / 18 * 13,
+        self.pushName = QLineEdit("", self.parent)
+        self.pushName.setGeometry(size.width() / 18 * 13,
                             size.height() / 15 * 14,
                             size.width() / 18 * 2,
                             size.height() / 25 * 1)
@@ -52,6 +64,9 @@ class systemButton(QWidget):
 
         if self.parent.server.check_connection() == True and self.parent.ob.is_active() == False:
             self.parent.stop_flag = False
+            #start timeout
+            self.startTime = time.time()
+            self.initPositionList.append(self.parent.init_position)
             self.parent.ob.start(serverObj=self.parent.server,
                                 hrtfL=self.parent.L,
                                 hrtfR=self.parent.R,
@@ -61,11 +76,23 @@ class systemButton(QWidget):
                                 sound_data=self.parent.sound_data)
         else:
             Dialog(self.parent, 1)
-            #QMessageBox.question(self, "再生中または接続がありません", QMessageBox.Yes, QMessageBox.Yes)
 
+    def resetFunc(self):
+        reply = QMessageBox.question(self, "警告", "リセットしますか？", QMessageBox.Yes|QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            #リセット
+            pass
+        else:
+            pass
 
     def pushData(self):
-        print("push")
+        saveNmae = self.pushName.text()
+        #出力リスト
+        self.initPositionList
+        self.parent.kaitouB.kaitou
+        self.parent.kaitouB.timeList
+
 
     def connect(self, status):
 

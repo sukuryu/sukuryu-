@@ -57,7 +57,7 @@ class overlap_add:
                 print(receive_data)
 
             tmp_conv_L, add_L = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfL[receive_data])
-            tmp_conv_R, add_R = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 0], self.hrtfR[receive_data])
+            tmp_conv_R, add_R = self.convolution(self.sound_data[self.index:self.index + self.cut_size, 1], self.hrtfR[receive_data])
 
             tmp_conv_L[:self.overLap] += self.history_L
             tmp_conv_R[:self.overLap] += self.history_R
@@ -181,13 +181,8 @@ class overlap_add:
         else:
             print("モード指定が正しくありません")
 
-    def stop(self, mode):
-        if mode == "elev0" and self.streamObj.is_active():
-            self.streamObj.close()
-        elif mode == "all_elev" and self.streamObj.is_active():
-            self.streamObj.close()
-        else:
-            print("モード指定が正しくありません")
+    def stop(self):
+        self.streamObj.close()
 
     def is_active(self):
         return self.threadActiveFlag

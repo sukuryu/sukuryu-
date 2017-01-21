@@ -10,6 +10,7 @@ import overlap_add
 import TCP_Server
 import pyaudio
 import scipy.io.wavfile as scw
+import threading
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -55,10 +56,20 @@ class MainWindow(QMainWindow):
         #connectの状態ラベル
         self.statusLabel = QLabel("接続なし", self)
         self.statusLabel.setGeometry(self.windowSize.width() / 18 * 15,
-                                self.windowSize.height() / 15 * 9,
+                                self.windowSize.height() / 16 * 9,
                                 self.windowSize.width() / 18 * 2,
                                 self.windowSize.height() / 18 * 2)
         self.statusLabel.setFont(font)
+
+        #データを受け取っているかの表示
+        self.receiveDataLable = QLabel("受信していません", self)
+        self.receiveDataLable.setGeometry(self.windowSize.width() / 18 *13,
+                                        self.windowSize.height() / 16 * 9,
+                                        self.windowSize.width() / 18 * 2,
+                                        self.windowSize.height() / 18 * 2)
+        self.statusLabel.setFont(font)
+
+
 
         #全画面表示
         self.resize(self.windowSize.width(), self.windowSize.height())

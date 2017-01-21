@@ -11,6 +11,8 @@ class TCP_Server:
         self.yaw = 0
         #ソケットがactiveかの判定flag
         self.activeFlag = False
+        #データが受信できているかの判定
+        self.receiveDataFlag = False
 
     def create_server(self, parent = None):
         self.parent = parent
@@ -20,6 +22,7 @@ class TCP_Server:
         self.serversocket.listen(1)
 
     def accept_loop(self):
+        self.receiveDataFlag = False
         try:
             self.clientsock, client_address = self.serversocket.accept()
         except socket.timeout:
@@ -38,12 +41,14 @@ class TCP_Server:
             if self.stop_event.is_set() == True:
                 break
             self.yaw = int.from_bytes(self.clientsock.recv(bufsize), "big")
+            self.receiveDataFlag = True 
 
         self.activeFlag = False
         #gui処理
         self.parent.sysButton.connectButton.setChecked(False)
 
     def accept_loop_2(self):
+        self.receiveDataFlag = False
         try:
             self.clientsock, client_address = self.serversocket.accept()
         except socket.timeout:
@@ -71,6 +76,9 @@ class TCP_Server:
             if len(self.data_list) != 3 or len(self.data_list[0]) > 15 or len(self.data_list[1]) > 15 or len(self.data_list[2]) > 15:
                 continue
 
+            #データ受信フラグ
+            self.receiveDataFlag = True
+
             for i in range(3):
                 self.data_list[i] = float(self.data_list[i])
 
@@ -83,6 +91,10 @@ class TCP_Server:
 
         self.stop_event = threading.Event()
 
+        self.check_handler = threading.Thread(target=self.label_loop)
+        print("debug")
+        self.check_handler.start()
+        
         if mode == "elev0":
             self.client_handler = threading.Thread(target=self.accept_loop)
             self.client_handler.start()
@@ -111,3 +123,14 @@ class TCP_Server:
 
     def check_connection(self):
         return self.activeFlag
+
+    def check_receive_data(self):
+        return self.receiveDataFlag
+
+    def label_loop(self):
+        while True:
+            if self.check_receive_data() == True:
+                self.parent.receiveDataLable.setText("受信中")
+            elif self.stop_event.is_set() == True:
+                break
+
